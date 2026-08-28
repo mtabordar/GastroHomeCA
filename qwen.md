@@ -306,4 +306,16 @@ refactor: [infrastructure] optimize EF Core query configuration
 
 ---
 
+## 🎯 Quick Reference Checklist
+
+Before committing code, ask yourself:
+
+- [ ] Are ALL `using` statements inside the namespace block?
+- [ ] Is the entity placed in `Domain/Entities/` folder?
+- [ ] Am I avoiding namespace/class name conflicts?
+- [ ] Do I have appropriate DTOs for Create/Read/Update operations?
+- [ ] Is the entity configuration in `Infrastructure/[Feature]/[Entity]Config.cs`?
+- [ ] Am I using fully qualified names where needed to avoid ambiguity?
+- [ ] Does my code compile without namespace resolution errors?
+
 *Last Updated: [Current Date]*

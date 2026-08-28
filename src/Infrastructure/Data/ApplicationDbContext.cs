@@ -1,11 +1,12 @@
-﻿using System.Reflection;
+﻿namespace GastroHomeCA.Infrastructure.Data;
+
+using System.Reflection;
 using GastroHomeCA.Application.Common.Interfaces;
 using GastroHomeCA.Domain.Entities;
 using GastroHomeCA.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace GastroHomeCA.Infrastructure.Data;
 
 public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplicationDbContext
 {
@@ -14,6 +15,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
     public DbSet<TodoList> TodoLists => Set<TodoList>();
 
     public DbSet<TodoItem> TodoItems => Set<TodoItem>();
+
+    public DbSet<Product> Products => Set<Product>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
