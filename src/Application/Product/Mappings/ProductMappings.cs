@@ -8,12 +8,22 @@ using GastroHomeCA.Domain.Entities;
 /// </summary>
 public static class ProductMappings
 {
-    public static CreateProductDto ToCreateProductDto(Guid id, Product product) => new()
+    public static CreateProductDto ToCreateProductDto(Product product) => new()
     {
-        Id = id,
         Name = product.Name,
         Category = product.Category,
         Barcode = product.Barcode,
         CurrentPrice = product.CurrentPrice
+    };
+
+    public static ProductDto ToProductDto(Product product) => new()
+    {
+        Id = product.Id,
+        Name = product.Name,
+        Category = product.Category,
+        Barcode = product.Barcode,
+        CurrentPrice = product.CurrentPrice,
+        CreatedDate = product.CreatedDate,
+        LastUpdatedDate = product.LastUpdatedDate
     };
 }

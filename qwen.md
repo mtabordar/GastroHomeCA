@@ -1,321 +1,311 @@
-# GastroHomeCA Architecture Guidelines
+"# GastroHomeCA - Quick Reference Guide
 
-This document outlines the architecture patterns, folder structure, and coding standards for the GastroHomeCA project.
-
----
-
-## 🏗️ Architecture Pattern
-
-**Clean Architecture / Onion Architecture** with layered dependency direction pointing inward.
-
-### Layer Responsibilities
-
-| Layer | Responsibility | Allowed Dependencies |
-|-------|---------------|---------------------|
-| **Domain** | Pure business entities, value objects, domain events, domain-specific logic | None (no external dependencies) |
-| **Application** | Use cases, commands, queries, DTOs, mappings, application services | Domain layer only |
-| **Infrastructure** | Data access, external APIs, implementations of interfaces defined in other layers | Application + Domain layers |
-| **Web/AppHost** | Presentation logic, Blazor Server app, API controllers, DI composition | All inner layers |
-| **Shared** | Reusable utilities, extension methods, common types | None (or limited to domain) |
-| **ServiceDefaults** | Telemetry, logging, health checks, background services | Infrastructure only |
+This document provides essential context for new sessions to understand the project architecture and coding patterns without needing to re-analyze the codebase.
 
 ---
 
-## 📁 Folder Structure Guidelines
+## 🏗️ Architecture Overview
 
-### Domain Layer (`src/Domain/`)
+**Pattern:** Clean Architecture / Onion Architecture with ASP.NET Minimal APIs
+
+**Layers (from center outward):**
+1. **Domain** - Pure business logic, entities, value objects (no dependencies)
+2. **Application** - Use cases, commands, queries, DTOs, mappings (depends only on Domain)
+3. **Infrastructure** - Data access, external services (depends on Application + Domain)
+4. **Web** - API endpoints, presentation layer (depends on all inner layers)
+5. **Shared** - Common utilities, extension methods
+6. **ServiceDefaults** - Telemetry, logging, health checks, DI extensions
+
+---
+
+## 📁 Actual Folder Structure
+
+### Domain (`src/Domain/`)
 ```
 Domain/
-├── [Feature]/              # Business entities per feature/module
-│   ├── [Entity].cs        # Domain entities with business rules
-│   ├── [ValueObject].cs   # Value objects
-│   └── [Event].cs         # Domain events
-├── Common/                # Shared domain concepts (BaseEntity, etc.)
-└── Events/                # Domain event definitions
+├── Entities/           # Domain entities (e.g., Product.cs)
+├── Common/             # BaseEntity, shared domain concepts
+└── Events/             # Domain event definitions
 ```
 
-### Application Layer (`src/Application/`)
+### Application (`src/Application/`)
 ```
 Application/
 ├── Common/
-│   ├── DTOs/              # Data transfer objects for API/UI responses
-│   └── Mappings/          # Entity ↔ DTO mappings
-├── [Feature]/             # Business use cases per feature
-│   ├── Commands/          # Command handlers, validators
-│   ├── Queries/           # Query handlers
-│   └── Events/            # Domain event handlers
-└── DependencyInjection.cs # Application service registrations
+│   ├── Interfaces/     # IApplicationDbContext, ISender, ICurrentUser
+│   ├── DTOs/           # CreateProductDto, ProductDto, etc.
+│   └── Behaviours/     # MediatR pipeline behaviors
+├── [Feature]/          # Commands, Queries, Handlers, Mappings per feature
+│   ├── Commands/       # Command definitions & handlers
+│   ├── Queries/        # Query definitions & handlers
+│   └── Mappings/       # Entity ↔ DTO mappings (static methods)
+└── DependencyInjection.cs
 ```
 
-### Infrastructure Layer (`src/Infrastructure/`)
+### Infrastructure (`src/Infrastructure/`)
 ```
 Infrastructure/
-├── [Feature]/             # Implementation per feature
-│   ├── [Entity]Config.cs  # EF Core entity configurations (Fluent API)
-│   └── [Service].cs       # External service implementations
-├── Persistence/           # Database context, migrations
-└── Common/                # Infrastructure shared utilities
+├── Data/               # ApplicationDbContext, migrations
+├── Services/           # External service implementations
+└── Extensions/         # Infrastructure extensions
 ```
 
-### Shared Layer (`src/Shared/`)
+### Web (`src/Web/`)
 ```
-Shared/
-├── Extensions/            # Extension methods for DI, DbContext, etc.
-├── Exceptions/            # Domain/application exceptions
-└── Utilities/             # Reusable helpers (not feature-specific)
-```
-
-### ServiceDefaults Layer (`src/ServiceDefaults/`)
-```
-ServiceDefaults/
-├── BackgroundServices.cs  # Timer-based background services
-├── HealthChecks.cs        # Health check registrations
-└── Extensions.cs          # Telemetry, logging, dependency injection
+Web/
+├── Endpoints/          # IEndpointGroup implementations (auto-discovered)
+│   ├── TodoItems.cs
+│   ├── TodoLists.cs
+│   ├── Users.cs
+│   └── [YourFeature].cs
+├── Infrastructure/     # WebApplicationExtensions.MapEndpoints()
+├── Services/           # CurrentUser implementation
+└── DependencyInjection.cs
 ```
 
-### AppHost Layer (`src/AppHost/`)
+### AppHost (`src/AppHost/`)
 ```
 AppHost/
-└── DependencyInjection.cs # Composition root: DI setup for all layers
+└── DependencyInjection.cs  # Composition root for all services
 ```
+
+---
+
+## 🔑 Key Design Patterns
+
+### 1. **Endpoint Groups (Minimal APIs)**
+Endpoints are auto-discovered via `IEndpointGroup` interface.
+
+**Pattern:**
+```csharp
+public class Products : IEndpointGroup
+{
+    public static string? RoutePrefix => null; // Defaults to /api/Products
+    
+    public static void Map(RouteGroupBuilder groupBuilder)
+    {
+        groupBuilder.MapPost(CreateProduct);
+        groupBuilder.MapGet("/{id:int}", GetProduct);
+    }
+    
+    public static async Task<Created<int>> CreateProduct(ISender sender, CreateProductCommand command)
+    {
+        var id = await sender.Send(command);
+        return TypedResults.Created($"/api/Products/{id}", id);
+    }
+}
+```
+
+**Auto-registered by:** `app.MapEndpoints(typeof(Program).Assembly)` in `Program.cs`
+
+### 2. **Command Pattern (MediatR)**
+Commands are handled by `IRequestHandler<TCommand, TResult>` or `IRequestHandler<TCommand>`.
+
+**Handler Pattern:**
+```csharp
+public class CreateProductCommandHandler(IApplicationDbContext dbContext)
+    : IRequestHandler<CreateProductCommand, int>
+{
+    public async Task<int> Handle(CreateProductCommand request, CancellationToken cancellationToken)
+    {
+        var product = new Product();
+        product.Create(request.Name, request.Category, request.Barcode, request.CurrentPrice);
+        
+        await dbContext.Products.AddAsync(product);
+        await dbContext.SaveChangesAsync();
+        return (int)product.Id;
+    }
+}
+```
+
+### 3. **Domain Validation**
+Business rules live in domain entities, not handlers.
+
+**Example:**
+```csharp
+public void Create(string name, string category, string? barcode = null, decimal price = 0m)
+{
+    if (string.IsNullOrWhiteSpace(name)) 
+        throw new ArgumentException("Product name cannot be empty.", nameof(name));
+    if (string.IsNullOrWhiteSpace(category)) 
+        throw new ArgumentException("Category cannot be empty.", nameof(category));
+    
+    Name = name;
+    Category = category;
+    // ...
+}
+```
+
+### 4. **FluentValidation**
+Validators use FluentValidation and are auto-registered.
+
+```csharp
+public class CreateProductCommandValidator : AbstractValidator<CreateProductCommand>
+{
+    public CreateProductCommandValidator()
+    {
+        RuleFor(x => x.Name)
+            .NotEmpty().WithMessage("Product name is required.")
+            .MaximumLength(200).WithMessage("Product name must not exceed 200 characters.");
+        
+        RuleFor(x => x.CurrentPrice)
+            .GreaterThanOrEqualTo(0).WithMessage("Price must be greater than or equal to zero.");
+    }
+}
+```
+
+### 5. **Entity Mappings**
+Mappings are static methods in `Application/[Feature]/Mappings/`
+
+```csharp
+public static class ProductMappings
+{
+    public static CreateProductDto ToCreateProductDto(Product product) => new()
+    {
+        Name = product.Name,
+        Category = product.Category,
+        Barcode = product.Barcode,
+        CurrentPrice = product.CurrentPrice
+    };
+    
+    public static ProductDto ToProductDto(Product product) => new()
+    {
+        Id = product.Id,
+        Name = product.Name,
+        Category = product.Category,
+        Barcode = product.Barcode,
+        CurrentPrice = product.CurrentPrice,
+        CreatedDate = product.CreatedDate,
+        LastUpdatedDate = product.LastUpdatedDate
+    };
+}
+```
+
+---
+
+## 📦 Key Dependencies by Layer
+
+| Layer | NuGet Packages |
+|-------|---------------|
+| **Domain** | None (pure) |
+| **Application** | MediatR, FluentValidation, AutoMapper (for maps) |
+| **Infrastructure** | Microsoft.EntityFrameworkCore, EntityFrameworkCore.Sqlite |
+| **Web** | Scalar.AspNetCore (OpenAPI docs) |
+
+---
+
+## 🎯 File Naming Conventions
+
+| Type | Pattern | Example |
+|------|---------|---------|
+| **Entity** | `[Noun].cs` | `Product.cs`, `TodoItem.cs` |
+| **Command** | `Create[Name]Command.cs` | `CreateProductCommand.cs` |
+| **Query** | `[Name]Query.cs` | `ListAllProductsQuery.cs` |
+| **Handler** | `[Action][Name]Handler.cs` | `CreateProductCommandHandler.cs` |
+| **Validator** | `[Name]Validator.cs` | `CreateProductCommandValidator.cs` |
+| **DTO** | `[Name]Dto.cs` | `ProductDto.cs`, `CreateProductDto.cs` |
+| **Mapping** | `[Name]Mappings.cs` | `ProductMappings.cs` |
 
 ---
 
 ## 📝 Coding Standards
 
-### 1. **DTOs**
-- ✅ Place in `Application/Common/DTOs/`
-- ✅ Use immutable properties (`init-only`)
-- ❌ Never expose domain entities directly as DTOs
+### ✅ DO:
+- Use `init-only` properties for DTOs
+- Keep domain entities pure (no external dependencies)
+- Use static methods for entity ↔ DTO mappings
+- Place validators in Application layer with FluentValidation
+- Follow dependency direction (outer layers depend on inner)
 
-**Example:**
+### ❌ DON'T:
+- Expose domain entities directly as DTOs
+- Mix infrastructure concerns with domain logic
+- Use AutoMapper (use static method mappings)
+- Put business rules in handlers (move to domain entities)
+- Use `Guid` for IDs (project uses `int`)
+
+---
+
+## 🔗 Dependency Injection Patterns
+
+### Application Layer
+Uses `AddApplicationServices()` in `Application/DependencyInjection.cs`:
+- Auto-registers MediatR from assembly
+- Auto-registers validators from assembly
+- Registers AutoMapper profiles
+
+### Infrastructure Layer
+Uses `AddInfrastructureServices()` in `Infrastructure/DependencyInjection.cs`:
+- Registers DbContext
+- Registers external services
+
+### Composition Root
+In `AppHost/DependencyInjection.cs`:
+- Composes all layer services
+
+---
+
+## 🚀 API Endpoint Registration
+
+All endpoints are auto-discovered:
+
 ```csharp
-// src/Application/Application/Common/DTOs/TodoItemResponse.cs
-public class TodoItemDto
-{
-    public Guid Id { get; init; }
-    public string Title { get; init; }
-    public string? Description { get; init; }
-    public DateTime CreatedAt { get; init; }
-}
+// In Program.cs
+app.MapEndpoints(typeof(Program).Assembly);
 ```
 
-### 2. **Mappings**
-- ✅ Place in `Application/Common/Mappings/`
-- ✅ Use static method-based mapping (no AutoMapper)
-- ❌ Don't mix entity and DTO logic
+This discovers all `IEndpointGroup` implementations and registers them as route groups.
 
-**Example:**
+---
+
+## 🧪 Testing Structure
+
+| Test Type | Location | Purpose |
+|-----------|----------|---------|
+| Domain Unit Tests | `tests/Domain.UnitTests/` | Entity behavior, validation |
+| Application Unit Tests | `tests/Application.UnitTests/` | Handler logic, validation |
+| Integration Tests | `tests/Infrastructure.IntegrationTests/` | EF Core, DB operations |
+| Acceptance Tests | `tests/Web.AcceptanceTests/` | E2E API flows |
+
+---
+
+## 📦 Key Interfaces (Don't Change)
+
 ```csharp
-// src/Application/Application/Common/Mappings/TodoItemMappings.cs
-public static class TodoItemMappings
-{
-    public static TodoItemDto ToDto(TodoItem entity) => new TodoItemDto
-    {
-        Id = entity.Id,
-        Title = entity.Title,
-        Description = entity.Description,
-        CreatedAt = entity.CreatedAt
-    };
+// Application
+IApplicationDbContext          // Database access
+ISender                        // MediatR sender
+ICurrentUser                   // Current user context
 
-    public static TodoItem ToEntity(TodoItemDto dto) => new TodoItem
-    {
-        Id = dto.Id,
-        Title = dto.Title ?? string.Empty,
-        Description = dto.Description,
-        CreatedAt = dto.CreatedAt
-    };
-}
-```
-
-### 3. **Business Logic & Rules**
-- ✅ Pure rules in Domain entities/value objects
-- ✅ Use Cases in Application layer (commands/queries)
-- ❌ Never mix infrastructure concerns with domain logic
-
-**Domain Entity Example:**
-```csharp
-// src/Domain/TodoItems/TodoItem.cs
-public class TodoItem : BaseEntity<TodoItem>
-{
-    public string Title { get; private set; }
-    
-    public void SetTitle(string title)
-    {
-        if (title.Length > 100)
-            throw new InvalidOperationException("Title exceeds maximum length");
-        
-        this.Title = title; // Business rule enforced at setter
-    }
-}
-```
-
-### 4. **Fluent API Configurations**
-- ✅ EF Core entity configurations in `Infrastructure/[Feature]/`
-- ✅ Validators in Application layer (e.g., `[Feature]/Validators.cs`)
-- ✅ Middleware/DI in AppHost/DependencyInjection.cs
-- ✅ Extension methods in Shared/Extensions/
-
-**EF Core Configuration Example:**
-```csharp
-// src/Infrastructure/TodoItems/TodoItemConfig.cs
-public static class TodoItemConfig
-{
-    public static void Configure(EntityTypeBuilder<TodoItem> builder)
-    {
-        builder.ToTable("todo_items");
-        
-        builder.Property(e => e.Title).HasMaxLength(100);
-        builder.Property(e => e.Description).HasMaxLength(500);
-    }
-}
-```
-
-### 5. **Domain Events**
-- ✅ Define in `Domain/[Feature]/[Event].cs`
-- ✅ Handle in `Application/[Feature]/Events/`
-- ❌ Don't handle infrastructure-specific logic in event handlers
-
----
-
-## 🔧 Dependency Injection Guidelines
-
-### Application Layer DI (`Application/DependencyInjection.cs`)
-```csharp
-public static class ApplicationServiceDefaults
-{
-    public static void Configure(
-        IServiceCollection services, 
-        IServiceProvider provider)
-    {
-        // Register application services
-        services.AddTransient<ICommandHandler<CreateTodoItemCommand>, CreateTodoItemHandler>();
-        services.AddTransient<IQueryHandler<TodoItemsQuery>, TodoItemsQueryHandler>();
-        
-        // Add validators if using FluentValidation
-        services.AddValidatorsFromAssemblyContaining<Application>()
-                 .ConfigureExistingValidatorServices();
-    }
-}
-```
-
-### Infrastructure Layer DI (`Infrastructure/DependencyInjection.cs`)
-```csharp
-public static class InfrastructureServiceDefaults
-{
-    public static void Configure(
-        IServiceCollection services, 
-        IConfiguration configuration)
-    {
-        // Register data access
-        services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
-        
-        // Add background services if needed
-        services.AddHostedService<BackgroundCleanupService>();
-    }
-}
-```
-
-### AppHost Composition Root (`AppHost/DependencyInjection.cs`)
-```csharp
-public static class AppHost
-{
-    public static IServiceCollection AddApplicationServices(
-        this IServiceCollection services)
-    {
-        services.AddApplication();
-        services.AddInfrastructure();
-        
-        // Register web-specific services
-        services.AddScoped<IUserService, UserService>();
-        
-        return services;
-    }
-}
+// Domain
+BaseEntity                     // All entities inherit this
+BaseEvent                      // Domain events
 ```
 
 ---
 
-## 🚫 Common Anti-Patterns to Avoid
+## ⚠️ Important Notes
 
-| ❌ Anti-Pattern | ✅ Correct Approach |
-|----------------|--------------------|
-| Domain entities depending on EF Core | Use DTOs; load entities without tracking |
-| Mappings in Infrastructure | Move mappings to Application layer |
-| Business rules in application handlers | Encapsulate rules in domain entities |
-| DTOs in Shared layer | DTOs are application-specific, not shared |
-| Infrastructure calling domain events directly | Let application layer handle event dispatching |
+1. **ID Type:** All entities use `int Id` (NOT Guid)
+2. **Date Format:** Use `DateTime` (not `DateTimeOffset`)
+3. **Barcode Validation:** Pattern `^[0-9\\-\\s]*$`
+4. **Route Defaults:** `/api/{EndpointGroupName}` unless overridden
+5. **Validation Order:** Domain → FluentValidation → Handler
 
 ---
 
-## 📦 NuGet Package Guidelines
+## 🎯 Quick Start for New Features
 
-Refer to `Directory.Packages.props` for approved package versions. Common patterns:
-
-- Domain: No external packages
-- Application: FluentValidation, MediatR, etc.
-- Infrastructure: EF Core, Npgsql/SQL Server drivers, Redis client, etc.
-- All layers: Common shared libraries (if any)
-
----
-
-## 🧪 Testing Guidelines
-
-| Test Type | Layer Being Tested | Recommended Location |
-|-----------|-------------------|---------------------|
-| **Unit Tests** | Application logic | `tests/Application.UnitTests/` |
-| **Domain Tests** | Domain entities/rules | `tests/Domain.UnitTests/` |
-| **Integration Tests** | Infrastructure (DB, APIs) | `tests/Infrastructure.IntegrationTests/` |
-| **Functional Tests** | Full application flow | `tests/Application.FunctionalTests/` |
-| **Acceptance Tests** | UI/API end-to-end | `tests/Web.AcceptanceTests/` |
+1. **Create Domain Entity** in `Domain/Entities/[Feature]/`
+2. **Create Command** in `Application/[Feature]/Commands/Create/`
+3. **Create Handler** in `Application/[Feature]/Handlers/Create/`
+4. **Create Validator** in `Application/[Feature]/Commands/Create/`
+5. **Create Mappings** in `Application/[Feature]/Mappings/`
+6. **Create DTOs** in `Application/Common/DTOs/`
+7. **Create Endpoint** in `Web/Endpoints/[Feature].cs`
+8. **Implement Configuration** in `Infrastructure/[Feature]/`
 
 ---
 
-## 📝 File Naming Conventions
-
-- **Entities:** `[Feature][Noun].cs` → `TodoItem.cs`, `UserAddress.cs`
-- **Commands:** `Create[TodoItem]Command.cs` → `CreateTodoItemCommand.cs`
-- **Queries:** `[Get/ListAll]TodoItemsQuery.cs` → `ListAllTodoItemsQuery.cs`
-- **Handlers:** `[Action][Noun]Handler.cs` → `CreateTodoItemHandler.cs`
-- **DTOs:** `ResponseDto`, `RequestDto`, `ViewModelDto` suffixes as appropriate
-- **Mappings:** `[EntityName]Mappings.cs` → `TodoItemMappings.cs`
-
----
-
-## 🔗 Version Control Notes
-
-### Commit Message Format
-```
-feat: [layer] add feature description
-
-Example:
-feat: [domain] add todo item entity with validation rules
-fix: [application] update mapping for response DTOs
-refactor: [infrastructure] optimize EF Core query configuration
-```
-
----
-
-## 📚 References
-
-- **Clean Architecture:** Robert C. Martin (Uncle Bob)
-- **Onion Architecture:** Jeff Palermo
-- **Domain-Driven Design:** Eric Evans
-- **ASP.NET Aspire Patterns:** Microsoft documentation
-
----
-
-## 🎯 Quick Reference Checklist
-
-Before committing code, ask yourself:
-
-- [ ] Are ALL `using` statements inside the namespace block?
-- [ ] Is the entity placed in `Domain/Entities/` folder?
-- [ ] Am I avoiding namespace/class name conflicts?
-- [ ] Do I have appropriate DTOs for Create/Read/Update operations?
-- [ ] Is the entity configuration in `Infrastructure/[Feature]/[Entity]Config.cs`?
-- [ ] Am I using fully qualified names where needed to avoid ambiguity?
-- [ ] Does my code compile without namespace resolution errors?
-
-*Last Updated: [Current Date]*
+*Last Updated: Current Session*
+"
