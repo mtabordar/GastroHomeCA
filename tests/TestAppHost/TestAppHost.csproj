@@ -4,6 +4,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>GastroHomeCA.TestAppHost</RootNamespace>
     <AssemblyName>GastroHomeCA.TestAppHost</AssemblyName>
+    <AspireUseCliBundle>true</AspireUseCliBundle>
   </PropertyGroup>
 
   <ItemGroup>
