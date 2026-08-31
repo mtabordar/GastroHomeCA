@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 export function Home() {
   return (
     <div>
@@ -16,6 +18,21 @@ export function Home() {
         <li><strong>Efficient production builds</strong>. In production mode, development-time features are disabled, and your <code>dotnet publish</code> configuration produces minified, efficiently bundled JavaScript files.</li>
       </ul>
       <p>The <code>ClientApp</code> subdirectory is a Vite + React application. Open a command prompt there to run <code>npm</code> commands such as <code>npm run dev</code> or <code>npm install</code>.</p>
+      <div style={{ marginTop: '30px' }}>
+        <h3>Get Started</h3>
+        <Link to="/product" style={{
+          display: 'inline-block',
+          padding: '12px 24px',
+          backgroundColor: '#007bff',
+          color: 'white',
+          textDecoration: 'none',
+          borderRadius: '4px',
+          fontSize: '16px',
+          fontWeight: '600'
+        }}>
+          Create Product
+        </Link>
+      </div>
     </div>
   );
 }

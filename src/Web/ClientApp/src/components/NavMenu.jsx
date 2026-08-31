@@ -35,6 +35,7 @@ export function NavMenu() {
           <li><Link to="/counter">Counter</Link></li>
           <li><Link to="/weather">Weather</Link></li>
           <li><Link to="/todo">Tasks</Link></li>
+          <li><Link to="/product">Product</Link></li>
         </ul>
         <ul>
           <AuthLinks />
@@ -45,3 +46,4 @@ export function NavMenu() {
     </header>
   );
 }
+

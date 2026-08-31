@@ -2,6 +2,7 @@ import { Counter } from "./components/Counter";
 import { Weather } from "./components/Weather";
 import { Tasks } from "./components/Todo";
 import { Home } from "./components/Home";
+import { CreateProductPage } from "./components/product";
 import { LoginPage } from "./components/api-authorization/LoginPage";
 import { RegisterPage } from "./components/api-authorization/RegisterPage";
 import { ProtectedRoute } from "./components/api-authorization/ProtectedRoute";
@@ -22,6 +23,10 @@ const AppRoutes = [
   {
     path: '/todo',
     element: <ProtectedRoute><Tasks /></ProtectedRoute>
+  },
+  {
+    path: '/product',
+    element: <CreateProductPage />
   },
   {
     path: '/login',
