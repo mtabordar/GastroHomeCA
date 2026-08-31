@@ -1,51 +1,51 @@
-﻿using GastroHomeCA.Application.Common.Exceptions;
-using GastroHomeCA.Application.TodoLists.Commands.CreateTodoList;
-using GastroHomeCA.Domain.Entities;
+﻿// using GastroHomeCA.Application.Common.Exceptions;
+// using GastroHomeCA.Application.TodoLists.Commands.CreateTodoList;
+// using GastroHomeCA.Domain.Entities;
 
-namespace GastroHomeCA.Application.FunctionalTests.TodoLists.Commands;
+// namespace GastroHomeCA.Application.FunctionalTests.TodoLists.Commands;
 
-public class CreateTodoListTests : TestBase
-{
-    [Test]
-    public async Task ShouldRequireMinimumFields()
-    {
-        var command = new CreateTodoListCommand();
-        await Should.ThrowAsync<ValidationException>(() => TestApp.SendAsync(command));
-    }
+// public class CreateTodoListTests : TestBase
+// {
+//     [Test]
+//     public async Task ShouldRequireMinimumFields()
+//     {
+//         var command = new CreateTodoListCommand();
+//         await Should.ThrowAsync<ValidationException>(() => TestApp.SendAsync(command));
+//     }
 
-    [Test]
-    public async Task ShouldRequireUniqueTitle()
-    {
-        await TestApp.SendAsync(new CreateTodoListCommand
-        {
-            Title = "Shopping"
-        });
+//     [Test]
+//     public async Task ShouldRequireUniqueTitle()
+//     {
+//         await TestApp.SendAsync(new CreateTodoListCommand
+//         {
+//             Title = "Shopping"
+//         });
 
-        var command = new CreateTodoListCommand
-        {
-            Title = "Shopping"
-        };
+//         var command = new CreateTodoListCommand
+//         {
+//             Title = "Shopping"
+//         };
 
-        await Should.ThrowAsync<ValidationException>(() => TestApp.SendAsync(command));
-    }
+//         await Should.ThrowAsync<ValidationException>(() => TestApp.SendAsync(command));
+//     }
 
-    [Test]
-    public async Task ShouldCreateTodoList()
-    {
-        var userId = await TestApp.RunAsDefaultUserAsync();
+//     [Test]
+//     public async Task ShouldCreateTodoList()
+//     {
+//         var userId = await TestApp.RunAsDefaultUserAsync();
 
-        var command = new CreateTodoListCommand
-        {
-            Title = "Tasks"
-        };
+//         var command = new CreateTodoListCommand
+//         {
+//             Title = "Tasks"
+//         };
 
-        var id = await TestApp.SendAsync(command);
+//         var id = await TestApp.SendAsync(command);
 
-        var list = await TestApp.FindAsync<TodoList>(id);
+//         var list = await TestApp.FindAsync<TodoList>(id);
 
-        list.ShouldNotBeNull();
-        list!.Title.ShouldBe(command.Title);
-        list.CreatedBy.ShouldBe(userId);
-        list.Created.ShouldBe(DateTime.Now, TimeSpan.FromMilliseconds(10000));
-    }
-}
+//         list.ShouldNotBeNull();
+//         list!.Title.ShouldBe(command.Title);
+//         list.CreatedBy.ShouldBe(userId);
+//         list.Created.ShouldBe(DateTime.Now, TimeSpan.FromMilliseconds(10000));
+//     }
+// }

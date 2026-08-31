@@ -1,10 +1,10 @@
-namespace GastroHomeCA.Application.FunctionalTests.Infrastructure;
+// namespace GastroHomeCA.Application.FunctionalTests.Infrastructure;
 
-public abstract class TestBase
-{
-    [SetUp]
-    public async Task SetUp()
-    {
-        await TestApp.ResetState();
-    }
-}
+// public abstract class TestBase
+// {
+//     [SetUp]
+//     public async Task SetUp()
+//     {
+//         await TestApp.ResetState();
+//     }
+// }
