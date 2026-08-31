@@ -216,6 +216,7 @@ public static class ProductMappings
 - Use static methods for entity ↔ DTO mappings
 - Place validators in Application layer with FluentValidation
 - Follow dependency direction (outer layers depend on inner)
+- Use primary constructors for all new classes (e.g., `class MyClass(int id)` instead of property-based initialization)
 
 ### ❌ DON'T:
 - Expose domain entities directly as DTOs
