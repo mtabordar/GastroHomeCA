@@ -1,4 +1,4 @@
-"namespace GastroHomeCA.Infrastructure.Data.Configurations;
+namespace GastroHomeCA.Infrastructure.Data.Configurations;
 
 using GastroHomeCA.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -12,11 +12,11 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
     public void Configure(EntityTypeBuilder<Product> builder)
     {
         // Define table name
-        builder.ToTable(\"products\");
+        builder.ToTable("products");
         
         // Map properties
         builder.Property(e => e.Id)
-            .HasColumnName(\"id\");
+            .HasColumnName("id");
         
         builder.Property(e => e.Name)
             .IsRequired()
@@ -31,13 +31,13 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         
         builder.Property(e => e.CurrentPrice)
             .IsRequired()
-            .HasColumnType(\"decimal(18,2)\");
+            .HasColumnType("decimal(18,2)");
         
         builder.Property(e => e.CreatedDate)
-            .HasColumnName(\"created_date\")
-            .HasDefaultValueSql(\"CURRENT_TIMESTAMP\");
+            .HasColumnName("created_date")
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
         
         builder.Property(e => e.LastUpdatedDate)
-            .HasColumnName(\"last_updated_date\");
+            .HasColumnName("last_updated_date");
     }
-}"
+}
