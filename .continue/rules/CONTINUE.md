@@ -153,7 +153,12 @@ dotnet test tests/Infrastructure.IntegrationTests/
 
 ### Build & Deployment
 
+**Always build the project before committing:**
+
 ```bash
+# Build the entire solution
+dotnet build
+
 # Web API
 dotnet build src/Web/
 
@@ -161,6 +166,8 @@ dotnet build src/Web/
 cd src/Web/ClientApp
 npm run build
 ```
+
+**Commit only after verifying the build succeeds!**
 
 ---
 
