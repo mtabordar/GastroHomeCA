@@ -56,7 +56,8 @@ src/
 │   └── DependencyInjection.cs
 │
 ├── Infrastructure/            # Data access, external services
-│   ├── Data/                 # ApplicationDbContext, migrations
+│   ├── Data/                 # ApplicationDbContext, migrations, entity configurations
+│   │   └── Configurations/   # EF Core entity mappings (IEntityTypeConfiguration<T>)
 │   ├── Services/             # External service implementations
 │   └── Extensions/           # Infrastructure extensions
 │
