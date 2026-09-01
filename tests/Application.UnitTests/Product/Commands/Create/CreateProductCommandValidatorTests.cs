@@ -1,7 +1,6 @@
 namespace GastroHomeCA.Application.UnitTests.Product.Commands.Create;
 
 using GastroHomeCA.Application.Product.Commands.Create;
-using MediatR;
 using Xunit;
 using Shouldly;
 

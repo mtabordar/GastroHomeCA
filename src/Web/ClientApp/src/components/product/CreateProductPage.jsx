@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ProductsClient, CreateProductRequest, HttpClient } from '../web-api-client';
-import { createSingletonHttpClient } from '../api-http-client';
+import { ProductsClient, CreateProductCommand } from '../../web-api-client';
+import { createSingletonHttpClient } from '../../api-http-client';
 
 const httpClient = createSingletonHttpClient();
 const productsClient = new ProductsClient(httpClient);
@@ -55,12 +55,12 @@ export function CreateProductPage() {
     setIsSubmitting(true);
 
     try {
-      await productsClient.createProduct({
-        name: formData.Name,
-        category: formData.Category,
-        barcode: formData.Barcode || undefined,
-        currentPrice: formData.CurrentPrice
-      });
+      await productsClient.createProduct(CreateProductCommand.create(
+        formData.Name,
+        formData.Category,
+        formData.Barcode || undefined,
+        formData.CurrentPrice
+      ));
 
       setSuccessMessage('Product created successfully!');
       setErrorMessage('');
