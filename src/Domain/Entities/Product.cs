@@ -36,6 +36,20 @@ public class Product : BaseEntity
     }
 
     /// <summary>
+    /// Updates the product's details.
+    /// </summary>
+    public void Update(string name, string category, string? barcode = null)
+    {
+        if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Product name cannot be empty.", nameof(name));
+        if (string.IsNullOrWhiteSpace(category)) throw new ArgumentException("Category cannot be empty.", nameof(category));
+
+        Name = name;
+        Category = category;
+        Barcode = barcode?.ToString();
+        LastUpdatedDate = DateTime.UtcNow.Date;
+    }
+
+    /// <summary>
     /// Updates the product's price.
     /// </summary>
     public void UpdatePrice(decimal newPrice)

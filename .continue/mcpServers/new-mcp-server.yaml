@@ -6,3 +6,11 @@ mcpServers:
     command: npx
     args:
       - "@playwright/mcp@latest"
+
+  - name: SQLite MCP
+    command: /usr/bin/uvx
+    args:
+      - "mcp-server-sqlite"
+      - /home/marlont/Proyectos/GastroHomeCA/src/Web/Data/GastroHomeCA.db
+    env:
+      PATH: "/usr/bin:/bin:/usr/local/bin"
