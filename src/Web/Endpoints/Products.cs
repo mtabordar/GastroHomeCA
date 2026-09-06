@@ -1,6 +1,7 @@
 using GastroHomeCA.Application.Product.Commands.Create;
 using GastroHomeCA.Application.Product.Commands.Update;
 using GastroHomeCA.Application.Product.Queries.GetProductById;
+using GastroHomeCA.Application.Product.Queries.ListProducts;
 using GastroHomeCA.Application.Common.DTOs;
 using Microsoft.AspNetCore.Http.HttpResults;
 
@@ -15,6 +16,7 @@ public class Products : IEndpointGroup
         groupBuilder.MapPost(CreateProduct);
         groupBuilder.MapPut(UpdateProduct, "{id:int}");
         groupBuilder.MapGet("/{id:int}", GetProduct);
+        groupBuilder.MapGet("", ListProducts);
     }
 
     [EndpointSummary("Create a new Product")]
@@ -43,5 +45,14 @@ public class Products : IEndpointGroup
         var query = new GetProductByIdQuery(id);
         var product = await sender.Send(query);
         return product;
+    }
+
+    [EndpointSummary("List All Products")]
+    [EndpointDescription("Returns a list of all products.")]
+    public static async Task<List<ProductDto>> ListProducts(ISender sender)
+    {
+        var query = new ListProductsQuery();
+        var products = await sender.Send(query);
+        return products;
     }
 }

@@ -66,7 +66,7 @@ export function CreateProductPage() {
       setErrorMessage('');
 
       setTimeout(() => {
-        navigate(-1);
+        navigate('/products');
       }, 1500);
     } catch (error) {
       setSuccessMessage('');
@@ -78,12 +78,14 @@ export function CreateProductPage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-
-    // Clear error when user starts typing
+        setFormData(prev => ({ ...prev, [name]: value }));
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+          setFormData(prev => ({ ...prev, [name]: value }));
     }
+  };
+
+  const handleCancel = () => {
+    navigate('/products');
   };
 
   return (
@@ -173,7 +175,7 @@ export function CreateProductPage() {
           <button
             type="button"
             style={styles.cancelButton}
-            onClick={() => navigate(-1)}
+            onClick={handleCancel}
             disabled={isSubmitting}
           >
             Cancel
@@ -271,3 +273,5 @@ const styles = {
     transition: 'background-color 0.2s'
   }
 };
+
+export default CreateProductPage;
