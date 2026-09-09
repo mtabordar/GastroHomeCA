@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ProductsClient, CreateProductCommand } from '../../web-api-client';
+import { ProductsClient } from '../../web-api-client';
 import { createSingletonHttpClient } from '../../api-http-client';
 
 const httpClient = createSingletonHttpClient();
-const productsClient = new ProductsClient(httpClient);
 
 export function CreateProductPage() {
   const [formData, setFormData] = useState({
@@ -20,6 +19,11 @@ export function CreateProductPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
+  const [productsClient, setProductsClient] = useState(null);
+
+  useEffect(() => {
+    setProductsClient(new ProductsClient(null, httpClient()));
+  }, []);
 
   const requiredFields = ['Name', 'Category'];
 
@@ -55,12 +59,18 @@ export function CreateProductPage() {
     setIsSubmitting(true);
 
     try {
-      await productsClient.createProduct(CreateProductCommand.create(
-        formData.Name,
-        formData.Category,
-        formData.Barcode || undefined,
-        formData.CurrentPrice
-      ));
+      if (!productsClient) {
+        setErrorMessage('Client not initialized');
+        setIsSubmitting(false);
+        return;
+      }
+
+      await productsClient.createProduct({
+        name: formData.Name,
+        category: formData.Category,
+        barcode: formData.Barcode || undefined,
+        currentPrice: formData.CurrentPrice
+      });
 
       setSuccessMessage('Product created successfully!');
       setErrorMessage('');
