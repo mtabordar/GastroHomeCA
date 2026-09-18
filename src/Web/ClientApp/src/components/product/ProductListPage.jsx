@@ -1,22 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { ProductsClient, ProductDto } from '../../web-api-client';
 import { createSingletonHttpClient } from '../../api-http-client';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const httpClient = createSingletonHttpClient();
-const productsClient = new ProductsClient(httpClient);
 
 export function ProductListPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const [productsClient, setProductsClient] = useState(null);
 
   useEffect(() => {
+    setProductsClient(new ProductsClient(null, httpClient));
+    
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        // Fetch all products using the new endpoint
         const result = await productsClient.productsAll();
         setProducts(result || []);
         setError('');
@@ -28,7 +29,7 @@ export function ProductListPage() {
     };
 
     fetchProducts();
-  }, []);
+  }, [productsClient]);
 
   const handleViewProduct = (productId) => {
     navigate(`/product/${productId}`);
@@ -185,3 +186,5 @@ const styles = {
     borderRadius: '4px'
   }
 };
+
+export default ProductListPage;

@@ -4,7 +4,6 @@ import { ProductsClient, ProductDto } from '../../web-api-client';
 import { createSingletonHttpClient } from '../../api-http-client';
 
 const httpClient = createSingletonHttpClient();
-const productsClient = new ProductsClient(httpClient);
 
 export function ViewProductPage() {
   const { id } = useParams();
@@ -12,8 +11,11 @@ export function ViewProductPage() {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [productsClient, setProductsClient] = useState(null);
 
   useEffect(() => {
+    setProductsClient(new ProductsClient(null, httpClient()));
+    
     const fetchProduct = async () => {
       try {
         setLoading(true);
@@ -28,7 +30,7 @@ export function ViewProductPage() {
     };
 
     fetchProduct();
-  }, [id]);
+  }, [id, productsClient]);
 
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this product?')) {
@@ -36,8 +38,6 @@ export function ViewProductPage() {
     }
 
     try {
-      // Note: We don't have a delete endpoint yet, so we'll just navigate back
-      // You can add a DELETE endpoint later
       navigate('/product');
     } catch (err) {
       setError('Failed to delete product');
@@ -61,9 +61,6 @@ export function ViewProductPage() {
       <div style={styles.container}>
         <h1 style={styles.title}>Error</h1>
         <div style={styles.errorMessage}>{error}</div>
-        <button style={styles.backButton} onClick={handleBack}>
-          Back to Products
-        </button>
       </div>
     );
   }
@@ -71,10 +68,7 @@ export function ViewProductPage() {
   if (!product) {
     return (
       <div style={styles.container}>
-        <h1 style={styles.title}>Product Not Found</h1>
-        <button style={styles.backButton} onClick={handleBack}>
-          Back to Products
-        </button>
+        <h1 style={styles.title}>Product not found</h1>
       </div>
     );
   }
@@ -82,43 +76,37 @@ export function ViewProductPage() {
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h1 style={styles.title}>Product Details</h1>
-        <div style={styles.buttonGroup}>
-          <button style={styles.backButton} onClick={handleBack}>
-            &larr; Back
-          </button>
-          <button style={styles.deleteButton} onClick={handleDelete}>
-            Delete
-          </button>
-        </div>
+        <button style={styles.backButton} onClick={handleBack}>
+          ← Back to Products
+        </button>
+        <h1 style={styles.title}>{product.Name}</h1>
       </div>
 
       <div style={styles.card}>
-        <div style={styles.field}>
-          <span style={styles.label}>Product Name:</span>
-          <span style={styles.value}>{product.Name}</span>
+        <div style={styles.cardBody}>
+          <p><strong>ID:</strong> {product.Id}</p>
+          <p><strong>Name:</strong> {product.Name}</p>
+          <p><strong>Category:</strong> {product.Category}</p>
+          {product.Barcode && (
+            <p><strong>Barcode:</strong> {product.Barcode}</p>
+          )}
+          <p><strong>Current Price:</strong> ${product.CurrentPrice.toFixed(2)}</p>
+          <p><strong>Original Price:</strong> ${product.OriginalPrice?.toFixed(2) || 'N/A'}</p>
         </div>
 
-        <div style={styles.field}>
-          <span style={styles.label}>Category:</span>
-          <span style={styles.value}>{product.Category}</span>
-        </div>
-
-        {product.Barcode && (
-          <div style={styles.field}>
-            <span style={styles.label}>Barcode:</span>
-            <span style={styles.value}>{product.Barcode}</span>
-          </div>
-        )}
-
-        <div style={styles.field}>
-          <span style={styles.label}>Current Price:</span>
-          <span style={styles.price}>{product.CurrentPrice.toFixed(2)}</span>
-        </div>
-
-        <div style={styles.field}>
-          <span style={styles.label}>ID:</span>
-          <span style={styles.value}>{product.Id}</span>
+        <div style={styles.cardFooter}>
+          <button
+            style={styles.editButton}
+            onClick={() => handleBack()}
+          >
+            Edit Product
+          </button>
+          <button
+            style={styles.deleteButton}
+            onClick={handleDelete}
+          >
+            Delete Product
+          </button>
         </div>
       </div>
     </div>
@@ -127,14 +115,9 @@ export function ViewProductPage() {
 
 const styles = {
   container: {
-    maxWidth: '700px',
+    maxWidth: '800px',
     margin: '0 auto',
     padding: '20px'
-  },
-  title: {
-    textAlign: 'center',
-    marginBottom: '20px',
-    color: '#333'
   },
   header: {
     display: 'flex',
@@ -142,40 +125,9 @@ const styles = {
     alignItems: 'center',
     marginBottom: '30px'
   },
-  buttonGroup: {
-    display: 'flex',
-    gap: '10px'
-  },
-  card: {
-    border: '1px solid #ddd',
-    borderRadius: '8px',
-    padding: '25px',
-    backgroundColor: '#f9f9f9'
-  },
-  field: {
-    marginBottom: '15px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start'
-  },
-  label: {
-    fontWeight: '600',
-    fontSize: '14px',
-    color: '#555',
-    minWidth: '120px'
-  },
-  value: {
-    fontSize: '16px',
-    color: '#333'
-  },
-  price: {
-    fontSize: '18px',
-    color: '#007bff',
-    fontWeight: '600'
-  },
   backButton: {
     padding: '10px 20px',
-    fontSize: '14px',
+    fontSize: '16px',
     backgroundColor: '#6c757d',
     color: 'white',
     border: 'none',
@@ -183,9 +135,42 @@ const styles = {
     cursor: 'pointer',
     transition: 'background-color 0.2s'
   },
+  title: {
+    margin: 0,
+    fontSize: '28px',
+    color: '#333'
+  },
+  card: {
+    border: '1px solid #ddd',
+    borderRadius: '8px',
+    padding: '25px',
+    backgroundColor: '#fff',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+  },
+  cardBody: {
+    fontSize: '16px',
+    color: '#555',
+    lineHeight: '1.8'
+  },
+  cardFooter: {
+    display: 'flex',
+    gap: '10px',
+    marginTop: '30px',
+    justifyContent: 'flex-end'
+  },
+  editButton: {
+    padding: '12px 24px',
+    fontSize: '16px',
+    backgroundColor: '#007bff',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    transition: 'background-color 0.2s'
+  },
   deleteButton: {
-    padding: '10px 20px',
-    fontSize: '14px',
+    padding: '12px 24px',
+    fontSize: '16px',
     backgroundColor: '#dc3545',
     color: 'white',
     border: 'none',
@@ -197,8 +182,8 @@ const styles = {
     padding: '15px',
     backgroundColor: '#f8d7da',
     color: '#721c24',
-    borderRadius: '4px',
-    marginBottom: '20px',
-    textAlign: 'center'
+    borderRadius: '4px'
   }
 };
+
+export default ViewProductPage;

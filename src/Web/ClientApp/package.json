@@ -11,6 +11,7 @@
     "react-router-dom": "^7.6.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@types/node": "^24.0.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",

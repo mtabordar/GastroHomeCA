@@ -5,4 +5,8 @@ mcpServers:
   - name: Browser search
     command: npx
     args:
+      - "-y"
       - "@playwright/mcp@latest"
+    env:
+      PLAYWRIGHT_CHROME_PATH: "/usr/bin/chromium"
+      EXECUTABLE_PATH: "/usr/bin/chromium"

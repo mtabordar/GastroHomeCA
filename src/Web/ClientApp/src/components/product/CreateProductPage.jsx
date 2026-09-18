@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { ProductsClient } from '../../web-api-client';
-import { createSingletonHttpClient } from '../../api-http-client';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const httpClient = createSingletonHttpClient();
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_APP_API_URL || 'http://localhost:5000';
 
 export function CreateProductPage() {
   const [formData, setFormData] = useState({
@@ -18,12 +16,6 @@ export function CreateProductPage() {
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
-  const location = useLocation();
-  const [productsClient, setProductsClient] = useState(null);
-
-  useEffect(() => {
-    setProductsClient(new ProductsClient(null, httpClient()));
-  }, []);
 
   const requiredFields = ['Name', 'Category'];
 
@@ -59,24 +51,29 @@ export function CreateProductPage() {
     setIsSubmitting(true);
 
     try {
-      if (!productsClient) {
-        setErrorMessage('Client not initialized');
-        setIsSubmitting(false);
-        return;
-      }
-
-      await productsClient.createProduct({
-        name: formData.Name,
-        category: formData.Category,
-        barcode: formData.Barcode || undefined,
-        currentPrice: formData.CurrentPrice
+      const response = await fetch(`${API_BASE_URL}/api/Products`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: formData.Name,
+          category: formData.Category,
+          barcode: formData.Barcode || null,
+          currentPrice: formData.CurrentPrice
+        })
       });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
 
       setSuccessMessage('Product created successfully!');
       setErrorMessage('');
 
       setTimeout(() => {
-        navigate('/products');
+        navigate('/product');
       }, 1500);
     } catch (error) {
       setSuccessMessage('');
@@ -88,14 +85,14 @@ export function CreateProductPage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
     if (errors[name]) {
-          setFormData(prev => ({ ...prev, [name]: value }));
+      setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
   const handleCancel = () => {
-    navigate('/products');
+    navigate('/product');
   };
 
   return (
