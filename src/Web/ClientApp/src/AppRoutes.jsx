@@ -1,7 +1,7 @@
+import { Home } from "./components/Home";
 import { Counter } from "./components/Counter";
 import { Weather } from "./components/Weather";
 import { Tasks } from "./components/Todo";
-import { Home } from "./components/Home";
 import { CreateProductPage } from "./components/product";
 import { ViewProductPage } from "./components/product";
 import { ProductListPage } from "./components/product";
@@ -27,12 +27,16 @@ const AppRoutes = [
     element: <ProtectedRoute><Tasks /></ProtectedRoute>
   },
   {
+    path: '/products',
+    element: <ProductListPage />
+  },
+  {
     path: '/product',
     element: <CreateProductPage />
   },
   {
-    path: '/products',
-    element: <ProductListPage />
+    path: '/product/create',
+    element: <CreateProductPage />
   },
   {
     path: '/product/:id',

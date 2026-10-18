@@ -10,3 +10,8 @@ mcpServers:
     env:
       PLAYWRIGHT_CHROME_PATH: "/usr/bin/chromium"
       EXECUTABLE_PATH: "/usr/bin/chromium"
+  - name: Context7 search
+    command: npx
+    args:
+      - "-y"
+      - "@upstash/context7-mcp"

@@ -4,17 +4,14 @@ import { createSingletonHttpClient } from '../../api-http-client';
 import { useNavigate } from 'react-router-dom';
 
 const httpClient = createSingletonHttpClient();
+const productsClient = new ProductsClient(null, httpClient);
 
 export function ProductListPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const [productsClient, setProductsClient] = useState(null);
-
   useEffect(() => {
-    setProductsClient(new ProductsClient(null, httpClient));
-    
     const fetchProducts = async () => {
       try {
         setLoading(true);
@@ -29,8 +26,7 @@ export function ProductListPage() {
     };
 
     fetchProducts();
-  }, [productsClient]);
-
+  }, []);
   const handleViewProduct = (productId) => {
     navigate(`/product/${productId}`);
   };
@@ -188,3 +184,4 @@ const styles = {
 };
 
 export default ProductListPage;
+

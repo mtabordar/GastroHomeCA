@@ -2,6 +2,7 @@
 /* tslint:disable */
 /**
  * HTTP Client Singleton for API calls
+ * Matches the interface expected by NSwag-generated clients
  */
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_APP_API_URL || 'http://localhost:5000';
@@ -22,57 +23,39 @@ class HttpClient {
     this.baseUrl = baseUrl;
   }
 
-  get(endpoint) {
-    return fetch(`${this.baseUrl}${endpoint}`)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
+  // This method matches the interface expected by NSwag-generated clients
+  // Returns a Promise<Response> - NSwag will handle JSON parsing internally
+  fetch(url, options = {}) {
+    return window.fetch(`${this.baseUrl}${url}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        ...options.headers
+      }
       });
   }
 
+  // Legacy methods for backward compatibility (if needed)
+  get(endpoint) {
+    return this.fetch(endpoint, { method: 'GET' });
+  }
+
   post(endpoint, data) {
-    return fetch(`${this.baseUrl}${endpoint}`, {
+    return this.fetch(endpoint, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
       body: JSON.stringify(data)
-    })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
       });
   }
 
   put(endpoint, data) {
-    return fetch(`${this.baseUrl}${endpoint}`, {
+    return this.fetch(endpoint, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
       body: JSON.stringify(data)
-    })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
       });
   }
 
   delete(endpoint) {
-    return fetch(`${this.baseUrl}${endpoint}`, {
-      method: 'DELETE'
-    })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      });
+    return this.fetch(endpoint, { method: 'DELETE' });
   }
 }

@@ -67,10 +67,19 @@
       "inlineNamedDictionaries": false,
       "inlineNamedAny": false,
       "includeHttpContext": false,
-"serviceHost": null,
+      "serviceHost": null,
       "serviceSchemes": null,
       "output": "src/web-api-client.ts",
-      "newLineBehavior": "Auto"
+      "newLineBehavior": "Auto",
+      "httpClassType": "HttpClient"
     }
-  }
+  },
+  "documents": [
+    {
+      "name": "MyApi",
+      "url": "../wwwroot/openapi/v1.json",
+      "project": null
+    }
+  ],
+  "profile": "MyApi"
 }

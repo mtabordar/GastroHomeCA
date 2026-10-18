@@ -24,7 +24,11 @@ else
     app.UseHsts();
 }
 
+if (!app.Environment.IsDevelopment())
+{
 app.UseHttpsRedirection();
+}
+
 app.UseCors(static builder => 
     builder.AllowAnyMethod()
         .AllowAnyHeader()
@@ -44,3 +48,4 @@ app.MapEndpoints(typeof(Program).Assembly);
 app.MapFallbackToFile("index.html");
 
 app.Run();
+
