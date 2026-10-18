@@ -1,4 +1,4 @@
-"# GastroHomeCA - Quick Reference Guide
+# GastroHomeCA - Quick Reference Guide
 
 This document provides essential context for new sessions to understand the project architecture and coding patterns without needing to re-analyze the codebase.
 
@@ -23,44 +23,61 @@ This document provides essential context for new sessions to understand the proj
 ### Domain (`src/Domain/`)
 ```
 Domain/
-├── Entities/           # Domain entities (e.g., Product.cs)
-├── Common/             # BaseEntity, shared domain concepts
-└── Events/             # Domain event definitions
+├── Entities/           # Domain entities (Product.cs, TodoItem.cs, TodoList.cs)
+├── Common/             # BaseEntity, BaseAuditableEntity, shared domain concepts
+├── Events/             # Domain event definitions
+├── ValueObjects/       # Immutable value objects (Colour.cs)
+├── Enums/              # Enumeration types (PriorityLevel.cs)
+├── Constants/          # Global constants (Roles.cs)
+└── Exceptions/         # Domain exceptions
 ```
 
 ### Application (`src/Application/`)
 ```
 Application/
 ├── Common/
-│   ├── Interfaces/     # IApplicationDbContext, ISender, ICurrentUser
+│   ├── Interfaces/     # IApplicationDbContext, ISender, ICurrentUser, IIdentityService
 │   ├── DTOs/           # CreateProductDto, ProductDto, etc.
-│   └── Behaviours/     # MediatR pipeline behaviors
-├── [Feature]/          # Commands, Queries, Handlers, Mappings per feature
-│   ├── Commands/       # Command definitions & handlers
-│   ├── Queries/        # Query definitions & handlers
-│   └── Mappings/       # Entity ↔ DTO mappings (static methods)
-└── DependencyInjection.cs
+│   ├── Behaviours/     # MediatR pipeline behaviors (AuthorizationBehaviour)
+│   ├── Exceptions/     # NotFoundException, ValidationException, etc.
+│   ├── Models/         # Result<T>, LookupDto
+│   └── Security/       # AuthorizeAttribute
+├── Product/            # Product feature
+│   ├── Commands/       # CreateProductCommand, UpdateProductCommand
+│   ├── Queries/        # GetProductByIdQuery, ListProductsQuery
+│   └── Mappings/       # ProductMappings.cs
+├── TodoLists/          # TodoLists feature
+├── TodoItems/          # TodoItems feature
+└── WeatherForecasts/   # WeatherForecasts feature
 ```
 
 ### Infrastructure (`src/Infrastructure/`)
 ```
 Infrastructure/
 ├── Data/               # ApplicationDbContext, migrations
+│   ├── Configurations/ # Entity configurations (ProductConfiguration, etc.)
+│   └── Interceptors/   # AuditableEntityInterceptor, DispatchDomainEventsInterceptor
 ├── Services/           # External service implementations
-└── Extensions/         # Infrastructure extensions
+└── Identity/           # ASP.NET Core Identity (ApplicationUser, IdentityService)
 ```
 
 ### Web (`src/Web/`)
 ```
 Web/
 ├── Endpoints/          # IEndpointGroup implementations (auto-discovered)
+│   ├── Products.cs
 │   ├── TodoItems.cs
 │   ├── TodoLists.cs
 │   ├── Users.cs
-│   └── [YourFeature].cs
+│   └── WeatherForecasts.cs
+├── ClientApp/          # React frontend (Vite + NSwag)
+│   ├── src/
+│   │   ├── components/ # React components (ProductListPage, etc.)
+│   │   ├── web-api-client.ts  # NSwag-generated TypeScript API client
+│   │   └── api-http-client.js # HTTP client wrapper
 ├── Infrastructure/     # WebApplicationExtensions.MapEndpoints()
 ├── Services/           # CurrentUser implementation
-└── DependencyInjection.cs
+└── Data/               # SQLite database (GastroHomeCA.db)
 ```
 
 ### AppHost (`src/AppHost/`)
@@ -190,7 +207,7 @@ public static class ProductMappings
 | **Domain** | None (pure) |
 | **Application** | MediatR, FluentValidation, AutoMapper (for maps) |
 | **Infrastructure** | Microsoft.EntityFrameworkCore, EntityFrameworkCore.Sqlite |
-| **Web** | Scalar.AspNetCore (OpenAPI docs) |
+| **Web** | Scalar.AspNetCore (OpenAPI docs), NSwag |
 
 ---
 
@@ -277,9 +294,11 @@ This discovers all `IEndpointGroup` implementations and registers them as route 
 IApplicationDbContext          // Database access
 ISender                        // MediatR sender
 ICurrentUser                   // Current user context
+IIdentityService              // Identity service
 
 // Domain
 BaseEntity                     // All entities inherit this
+BaseAuditableEntity           // Auditable entities
 BaseEvent                      // Domain events
 ```
 
@@ -289,9 +308,11 @@ BaseEvent                      // Domain events
 
 1. **ID Type:** All entities use `int Id` (NOT Guid)
 2. **Date Format:** Use `DateTime` (not `DateTimeOffset`)
-3. **Barcode Validation:** Pattern `^[0-9\\-\\s]*$`
+3. **Barcode Validation:** Pattern `^[0-9\s\-]*$`
 4. **Route Defaults:** `/api/{EndpointGroupName}` unless overridden
 5. **Validation Order:** Domain → FluentValidation → Handler
+6. **Frontend:** React with NSwag-generated TypeScript client
+7. **API Docs:** Scalar OpenAPI UI at `/scalar`
 
 ---
 
@@ -305,8 +326,138 @@ BaseEvent                      // Domain events
 6. **Create DTOs** in `Application/Common/DTOs/`
 7. **Create Endpoint** in `Web/Endpoints/[Feature].cs`
 8. **Implement Configuration** in `Infrastructure/[Feature]/`
+9. **Add React Component** in `Web/ClientApp/src/components/[Feature]/`
+
+---
+
+## 🐛 Troubleshooting Common Issues
+
+### Build Errors
+
+**Missing export errors:**
+- Check if all types are properly exported from `web-api-client.ts`
+- Ensure NSwag has generated the latest API client
+
+**Sass deprecation warnings:**
+- These are safe to ignore for now
+- Consider upgrading PicoCSS in the future
+
+### Runtime Errors
+
+**Database initialization:**
+- Only runs in Development environment
+- Requires `app.InitialiseDatabaseAsync()` call
+
+**CORS errors:**
+- Current config allows any origin
+- Update for production: restrict allowed origins
+
+---
+
+## 💻 Running Commands & Tests (Best Practices)
+
+### Building the Project
+
+```bash
+# Always use absolute paths or proper directory changes
+cd /home/marlont/Proyectos/GastroHomeCA
+
+# Build entire solution
+dotnet build
+
+# Build specific project
+dotnet build src/Web/
+
+# Build React client
+cd src/Web/ClientApp && npm run build
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+dotnet test
+
+# Run specific test project
+dotnet test tests/Application.UnitTests/
+
+# Run tests with verbose output
+dotnet test --verbosity normal
+
+# Run tests with filter
+dotnet test --filter "FullyQualifiedName~Product"
+```
+
+### Running the Application
+
+```bash
+# Using Aspire (recommended)
+dotnet run --project src/AppHost
+
+# Running Web project directly
+dotnet run --project src/Web/
+
+# Running with specific environment
+dotnet run --project src/AppHost --environment Development
+```
+
+### Database Operations
+
+```bash
+# Add migration
+cd src/Web/
+dotnet ef migrations add [MigrationName]
+
+# Update database
+dotnet ef database update
+
+# Remove last migration
+dotnet ef migrations remove
+```
+
+### Frontend Development
+
+```bash
+# Install dependencies
+cd src/Web/ClientApp
+npm install
+
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Generate API client with NSwag
+# (Run after making API changes)
+npx nswag run nswag.json
+```
+
+### Git Operations
+
+```bash
+# Stage all changes
+git add -A
+
+# Commit with message
+git commit -m "description of changes"
+
+# Push to remote
+git push origin main
+
+# Check status
+git status
+```
+
+### Important Notes for Command Execution
+
+1. **Use absolute paths** when running commands from different directories
+2. **Always build before committing** - both backend and frontend must compile
+3. **Check for errors** after each major operation
+4. **Use `dotnet restore`** if dependencies are missing
+5. **Clear build cache** if encountering strange errors: `dotnet clean && dotnet build`
+6. **Restart Aspire** if the dashboard doesn't open: kill the process and run again
 
 ---
 
 *Last Updated: Current Session*
-"
