@@ -20,9 +20,3 @@ Content-Type: application/x-www-form-urlencoded
 Input.Email={{Email}}&Input.Password={{Password}}&__RequestVerificationToken={{RequestVerificationToken}}
 
 ###
-
-# GET WeatherForecast
-GET {{Web_HostAddress}}/api/WeatherForecasts
-Cookie: {{AuthCookieName}}={{AuthCookieValue}}
-
-###

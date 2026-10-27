@@ -19,14 +19,7 @@ export default defineConfig({
         target: 'http://localhost:5073',
         changeOrigin: true,
       },
-      '/weatherforecast': {
-        target: 'http://localhost:5073',
-        changeOrigin: true,
-      },
-      '/WeatherForecast': {
-        target: 'http://localhost:5073',
-        changeOrigin: true,
-      },
+
     },
   },
   build: {

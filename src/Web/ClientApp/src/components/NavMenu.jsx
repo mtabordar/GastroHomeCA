@@ -28,12 +28,10 @@ export function NavMenu() {
     <header>
       <nav>
         <ul>
-          <li><Link to="/">Clean Architecture</Link></li>
+          <li><Link to="/">GastroHomeCA</Link></li>
         </ul>
         <ul>
           <li><Link to="/">Home</Link></li>
-          <li><Link to="/counter">Counter</Link></li>
-          <li><Link to="/weather">Weather</Link></li>
           <li><Link to="/todo">Tasks</Link></li>
           <li><Link to="/product">Product</Link></li>
         </ul>

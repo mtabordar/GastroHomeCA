@@ -46,7 +46,7 @@ Application/
 │   ├── Commands/       # CreateProductCommand, UpdateProductCommand
 │   ├── Queries/        # GetProductByIdQuery, ListProductsQuery
 │   └── Mappings/       # ProductMappings.cs
-└── WeatherForecasts/   # WeatherForecasts feature
+└── Common/             # Shared application concerns
 ```
 
 ### Infrastructure (`src/Infrastructure/`)
@@ -65,7 +65,6 @@ Web/
 ├── Endpoints/          # IEndpointGroup implementations (auto-discovered)
 │   ├── Products.cs
 │   ├── Users.cs
-│   └── WeatherForecasts.cs
 ├── ClientApp/          # React frontend (Vite + NSwag)
 │   ├── src/
 │   │   ├── components/ # React components (ProductListPage, etc.)

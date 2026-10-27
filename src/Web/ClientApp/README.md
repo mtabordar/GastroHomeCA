@@ -28,7 +28,7 @@ Runs ESLint on the src directory.
 
 - `src/` - React source code
 - `src/main.jsx` - Application entry point
-- `src/App.js` - Root component
+- `src/App.jsx` - Root component
 - `src/components/` - React components
 - `public/` - Static assets (favicon, manifest)
 - `vite.config.ts` - Vite configuration with proxy settings
