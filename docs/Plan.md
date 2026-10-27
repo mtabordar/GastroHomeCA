@@ -9,6 +9,7 @@ Aplicación para gestionar productos, realizar listas de compras, hacer seguimie
 
 ### ✅ Implementados
 - **Gestión de Productos:** Crear, editar y eliminar productos (nombre, categoría, código de barras, precio actual)
+- **Listas de Compras:** Crear listas de compras con nombre, agregar productos, marcar como comprados, cantidad y notas
 - **Listas de Tareas:** Crear listas de tareas con prioridades (funcionalidad genérica de TodoLists/TodoItems)
 - **Autenticación:** Registro, inicio y cierre de sesión de usuarios
 
@@ -87,12 +88,12 @@ Sugerir productos para comprar basándose en el historial y patrones del usuario
 
 ## 5. Mejoras a Funcionalidades Existentes
 
-### Listas de Tareas → Listas de Compras
-Adaptar la funcionalidad actual de TodoLists para uso como listas de compras:
+### Listas de Compras ✅
 - Crear listas de compras con nombre
 - Agregar productos a la lista de compra
 - Marcar productos como comprados
 - Lista de compras persistente entre viajes
+- Cantidad y notas por producto
 
 ### Autenticación
 - Perfiles de usuario con preferencias

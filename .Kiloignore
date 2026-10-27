@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# .NET build outputs
+bin/
+obj/
+**/bin/
+**/obj/
+
+# Build artifacts
+artifacts/
+
+# Dist / compiled outputs
+dist/
+**/dist/
+
+# Test coverage
+coverage/
+**/coverage/
+
+# Large lock files (too heavy to load into context)
+package-lock.json
+**/package-lock.json
+**/yarn.lock
+**/pnpm-lock.yaml
+
+# Skill LICENSE files (heavy, not needed for code work)
+.kilo/skills/*/LICENSE
+
+# IDE / editor artifacts
+.vs/
+.vscode/settings.json
+
+# OS files
+.DS_Store
+Thumbs.db
