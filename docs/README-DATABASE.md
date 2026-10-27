@@ -29,8 +29,6 @@ Located in `src/Infrastructure/Data/ApplicationDbContext.cs`:
 public class ApplicationDbContext : BaseAuditableDbContext, IApplicationDbContext
 {
     public DbSet<Product> Products => Set<Product>();
-    public DbSet<TodoItem> TodoItems => Set<TodoItem>();
-    public DbSet<TodoList> TodoLists => Set<TodoList>();
 }
 ```
 
@@ -42,17 +40,6 @@ Located in `src/Infrastructure/Data/Configurations/ProductConfiguration.cs`:
 - `Category`: required, max 100 chars
 - `Barcode`: max 50 chars, unique index
 - `CurrentPrice`: decimal(18,2)
-
-### TodoItem Configuration
-Located in `src/Infrastructure/Data/Configurations/TodoItemConfiguration.cs`:
-- `Title`: required, max 200 chars
-- `Done`: required boolean
-- `Priority`: converted to int
-
-### TodoList Configuration
-Located in `src/Infrastructure/Data/Configurations/TodoListConfiguration.cs`:
-- `Title`: required, max 200 chars
-- `Colour`: text type
 
 ## Database Interceptors
 
@@ -111,11 +98,6 @@ src/Web/Data/GastroHomeCA.db-wal  # Write-ahead log file
 
 ## Entity Relationships
 
-### TodoItem ↔ TodoList
-- **TodoItem** (many) → **TodoList** (one) - Many-to-one
-- Foreign key: `ListId`
-- Navigation property: `TodoList.Items`
-
 ### Product
 - No direct relationships currently defined
 - Future: One-to-many with PriceHistory
@@ -126,9 +108,6 @@ src/Web/Data/GastroHomeCA.db-wal  # Write-ahead log file
 |--------|--------|------|
 | Product | Id | Primary key |
 | Product | Barcode | Unique index |
-| TodoItem | Id | Primary key |
-| TodoItem | ListId | Foreign key index |
-| TodoList | Id | Primary key |
 
 ## Data Types
 
@@ -139,11 +118,6 @@ src/Web/Data/GastroHomeCA.db-wal  # Write-ahead log file
 | Category | TEXT | Max length 100 |
 | Barcode | TEXT | Max length 50, nullable |
 | CurrentPrice | DECIMAL(18,2) | Price in currency |
-| Title | TEXT | Max length 200 |
-| Done | INTEGER | Boolean (0 or 1) |
-| Priority | INTEGER | Priority level |
-| ListId | INTEGER | Foreign key |
-| Colour | TEXT | Color value |
 | CreatedDate | DATETIME | Auto-set on creation |
 | LastUpdatedDate | DATETIME | Auto-set on update |
 | CreatedBy | TEXT | Nullable user name |

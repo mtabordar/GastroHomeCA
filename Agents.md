@@ -23,7 +23,7 @@ This document provides essential context for new sessions to understand the proj
 ### Domain (`src/Domain/`)
 ```
 Domain/
-├── Entities/           # Domain entities (Product.cs, TodoItem.cs, TodoList.cs)
+├── Entities/           # Domain entities (Product.cs)
 ├── Common/             # BaseEntity, BaseAuditableEntity, shared domain concepts
 ├── Events/             # Domain event definitions
 ├── ValueObjects/       # Immutable value objects (Colour.cs)
@@ -46,8 +46,6 @@ Application/
 │   ├── Commands/       # CreateProductCommand, UpdateProductCommand
 │   ├── Queries/        # GetProductByIdQuery, ListProductsQuery
 │   └── Mappings/       # ProductMappings.cs
-├── TodoLists/          # TodoLists feature
-├── TodoItems/          # TodoItems feature
 └── WeatherForecasts/   # WeatherForecasts feature
 ```
 
@@ -66,8 +64,6 @@ Infrastructure/
 Web/
 ├── Endpoints/          # IEndpointGroup implementations (auto-discovered)
 │   ├── Products.cs
-│   ├── TodoItems.cs
-│   ├── TodoLists.cs
 │   ├── Users.cs
 │   └── WeatherForecasts.cs
 ├── ClientApp/          # React frontend (Vite + NSwag)
@@ -215,7 +211,7 @@ public static class ProductMappings
 
 | Type | Pattern | Example |
 |------|---------|---------|
-| **Entity** | `[Noun].cs` | `Product.cs`, `TodoItem.cs` |
+| **Entity** | `[Noun].cs` | `Product.cs` |
 | **Command** | `Create[Name]Command.cs` | `CreateProductCommand.cs` |
 | **Query** | `[Name]Query.cs` | `ListAllProductsQuery.cs` |
 | **Handler** | `[Action][Name]Handler.cs` | `CreateProductCommandHandler.cs` |
