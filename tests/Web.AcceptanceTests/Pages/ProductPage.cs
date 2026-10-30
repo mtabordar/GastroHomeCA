@@ -1,8 +1,8 @@
 namespace GastroHomeCA.Web.AcceptanceTests.Pages;
 
-public class ProductPage
+public class ProductPage(IPage page) : BasePage(page)
 {
-    public ProductPage(IPlaywright playwright) : base(playwright) { }
+    public override string PagePath => $"{BaseUrl}/products";
 
     public async Task NavigateToProducts()
     {
@@ -33,10 +33,10 @@ public class ProductPage
 
     public async Task VerifyProductCreated()
     {
-        await Page.WaitForSelectorAsync(".product-card", State: StateAttached);
+        await Page.WaitForSelectorAsync(".product-card");
     }
 
-    public async Task VerifyProductNotCreated()
+    public async Task<string?> VerifyProductNotCreated()
     {
         var errorMsg = await Page.QuerySelectorAsync(".alert-danger");
         if (errorMsg != null)

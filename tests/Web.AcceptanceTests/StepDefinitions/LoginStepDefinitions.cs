@@ -1,52 +1,38 @@
 namespace GastroHomeCA.Web.AcceptanceTests.StepDefinitions;
 
-[Binding]
-public sealed class LoginStepDefinitions(LoginPage loginPage)
+public sealed class LoginStepDefinitions
 {
-    [BeforeFeature("Login")]
-    public static async Task BeforeLoginFeature(IObjectContainer container)
+    private readonly LoginPage _loginPage;
+
+    public LoginStepDefinitions()
     {
-        var context = await PlaywrightSetup.Browser.NewContextAsync();
-        var page = await context.NewPageAsync();
-        container.RegisterInstanceAs(context);
-        container.RegisterInstanceAs(new LoginPage(page));
+        var context = PlaywrightSetup.Browser.NewContextAsync().Result;
+        var page = context.NewPageAsync().Result;
+        _loginPage = new LoginPage(page);
     }
 
-    [AfterFeature]
-    public static async Task AfterLoginFeature(IObjectContainer container)
+    [Fact]
+    public async Task Login_WithValidCredentials_Succeeds()
     {
-        var context = container.Resolve<IBrowserContext>();
-        await context.DisposeAsync();
-    }
+        await _loginPage.GotoAsync();
+        await _loginPage.SetEmail("administrator@localhost");
+        await _loginPage.SetPassword("Administrator1!");
+        await _loginPage.ClickLogin();
 
-    [Given("a logged out user")]
-    public Task GivenALoggedOutUser() => loginPage.GotoAsync();
-
-    [When("the user logs in with valid credentials")]
-    public async Task TheUserLogsInWithValidCredentials()
-    {
-        await loginPage.SetEmail("administrator@localhost");
-        await loginPage.SetPassword("Administrator1!");
-        await loginPage.ClickLogin();
-    }
-
-    [Then("they log in successfully")]
-    public async Task TheyLogInSuccessfully()
-    {
-        var logoutButtonText = await loginPage.LogoutButtonText();
+        var logoutButtonText = await _loginPage.LogoutButtonText();
 
         logoutButtonText.ShouldNotBeNull();
         logoutButtonText.ShouldBe("Log out");
     }
 
-    [When("the user logs in with invalid credentials")]
-    public async Task TheUserLogsInWithInvalidCredentials()
+    [Fact]
+    public async Task Login_WithInvalidCredentials_ShowsError()
     {
-        await loginPage.SetEmail("hacker@localhost");
-        await loginPage.SetPassword("l337hax!");
-        await loginPage.ClickLogin();
-    }
+        await _loginPage.GotoAsync();
+        await _loginPage.SetEmail("hacker@localhost");
+        await _loginPage.SetPassword("l337hax!");
+        await _loginPage.ClickLogin();
 
-    [Then("an error is displayed")]
-    public Task AnErrorIsDisplayed() => loginPage.AssertErrorVisible();
+        await _loginPage.AssertErrorVisible();
+    }
 }

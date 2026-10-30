@@ -2,32 +2,32 @@ using System.Diagnostics;
 
 namespace GastroHomeCA.Web.AcceptanceTests;
 
-[SetUpFixture]
-public class PlaywrightSetup
+[CollectionDefinition("AcceptanceTests")]
+public class AcceptanceTestsCollection : ICollectionFixture<PlaywrightSetup>, ICollectionFixture<AspireSetup>
+{
+}
+
+public class PlaywrightSetup : IDisposable
 {
     private static bool IsHeadless => Debugger.IsAttached is false;
     private static IPlaywright? _playwright;
 
     public static IBrowser Browser { get; private set; } = null!;
 
-    [OneTimeSetUp]
-    public async Task OneTimeSetUp()
+    static PlaywrightSetup()
     {
-        Assertions.SetDefaultExpectTimeout(10_000);
+        _playwright = Playwright.CreateAsync().Result;
 
-        _playwright = await Playwright.CreateAsync();
-
-        Browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+        Browser = _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
         {
             Headless = IsHeadless,
             SlowMo = IsHeadless ? 0 : 500
-        });
+        }).Result;
     }
 
-    [OneTimeTearDown]
-    public async Task OneTimeTearDown()
+    public void Dispose()
     {
-        await Browser.CloseAsync();
+        Browser.CloseAsync().Wait();
         _playwright?.Dispose();
     }
 }

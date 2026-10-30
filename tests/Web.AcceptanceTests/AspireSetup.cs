@@ -2,34 +2,36 @@ using Aspire.Hosting;
 
 namespace GastroHomeCA.Web.AcceptanceTests;
 
-[SetUpFixture]
-public class AspireSetup
+[CollectionDefinition("AcceptanceTests")]
+public class AcceptanceTestsCollectionDefinition
+{
+}
+
+public class AspireSetup : IDisposable
 {
     private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(60);
 
     public static IDistributedApplicationTestingBuilder Builder { get; private set; } = null!;
     public static DistributedApplication App { get; private set; } = null!;
 
-    [OneTimeSetUp]
-    public async Task OneTimeSetup()
+    static AspireSetup()
     {
         var cts = new CancellationTokenSource(DefaultTimeout);
         var cancellationToken = cts.Token;
 
-        Builder = await DistributedApplicationTestingBuilder
+        Builder = DistributedApplicationTestingBuilder
              .CreateAsync<Projects.AppHost>(
                 args: [],
                 configureBuilder: (options, _) =>
                 {
-                    options.DisableDashboard = false; // Enable the dashboard for testing purposes
-                });
+                    options.DisableDashboard = false;
+                }).Result;
 
         Builder.Configuration["ASPIRE_ALLOW_UNSECURED_TRANSPORT"] = "true";
 
         Builder.Services.AddLogging(logging =>
         {
             logging.SetMinimumLevel(LogLevel.Debug);
-            // Override the logging filters from the app's configuration
             logging.AddFilter(Builder.Environment.ApplicationName, LogLevel.Debug);
             logging.AddFilter("Aspire.", LogLevel.Debug);
         });
@@ -39,22 +41,21 @@ public class AspireSetup
             clientBuilder.AddStandardResilienceHandler();
         });
 
-        App = await Builder
+        App = Builder
             .BuildAsync(cancellationToken)
-            .WaitAsync(cancellationToken);
+            .Result;
 
-        await App
+        App
             .StartAsync(cancellationToken)
-            .WaitAsync(cancellationToken);
+            .Wait(cancellationToken);
 
-        await Task.WhenAll(
-            App.ResourceNotifications.WaitForResourceHealthyAsync(Services.WebApi, cancellationToken).WaitAsync(cancellationToken),
-            App.ResourceNotifications.WaitForResourceHealthyAsync(Services.WebFrontend, cancellationToken).WaitAsync(cancellationToken));
+        Task.WaitAll(
+            App.ResourceNotifications.WaitForResourceHealthyAsync(Services.WebApi, cancellationToken),
+            App.ResourceNotifications.WaitForResourceHealthyAsync(Services.WebFrontend, cancellationToken));
     }
 
-    [OneTimeTearDown]
-    public async Task OneTimeTearDown()
+    public void Dispose()
     {
-        await App.DisposeAsync();
+        App.DisposeAsync().GetAwaiter().GetResult();
     }
 }

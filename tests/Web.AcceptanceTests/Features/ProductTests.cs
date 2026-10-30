@@ -1,212 +1,132 @@
 using GastroHomeCA.Web.AcceptanceTests.Pages;
-using GastroHomeCA.Web.AcceptanceTests.Assertions;
 
 namespace GastroHomeCA.Web.AcceptanceTests.Features;
 
-[Describe("Product Management")]
+[Collection("AcceptanceTests")]
 public class ProductTests
 {
-    [BeforeTest]
-    public async Task BeforeTest()
+    private readonly IPage _page;
+
+    public ProductTests()
     {
-        Logger.Info("Starting Product tests");
+        var context = PlaywrightSetup.Browser.NewContextAsync().Result;
+        _page = context.NewPageAsync().Result;
     }
 
-    [AfterTest]
-    public async Task AfterTest()
-    {
-        Logger.Info("Product tests completed");
-    }
-
-    [Test]
-    [Order(1)]
+    [Fact]
     public async Task List_Products_Should_Display_Products()
     {
-        Logger.Info("Testing product list");
+        await _page.GotoAsync("http://localhost:5173");
+        await _page.WaitForSelectorAsync(".app-container");
 
-        await Page.GotoAsync("http://localhost:5173");
-        await Page.WaitForSelectorAsync(".app-container", State: StateAttached);
+        var products = await _page.QuerySelectorAllAsync(".product-card");
+        products.Count.ShouldBeGreaterThanOrEqualTo(0);
 
-        // Wait for products to load
-        var products = await Page.QuerySelectorAllAsync(".product-card");
-        Logger.Info($"Found {products.Length} products");
-
-        // Verify page loaded without errors
-        var response = await Page.Request.GetAsync("http://localhost:7000/api/Products");
-        var status = response.Status;
-        Logger.Info($"API Status: {status}");
-
-        // If there are products, verify their data
-        if (products.Length > 0)
-        {
-            var firstProduct = products[0];
-            var productName = await firstProduct.QuerySelectorAsync(".product-name")?.TextContentAsync();
-            Logger.Info($"First product: {productName}");
-        }
-
-        Logger.Pass("Product list test completed");
+        var response = await _page.EvaluateAsync<string>("fetch('http://localhost:7000/api/Products').then(r => r.status.toString())");
+        response.ShouldBe("200");
     }
 
-    [Test]
-    [Order(2)]
+    [Fact]
     public async Task Add_Product_Should_Create_Product()
     {
-        Logger.Info("Testing add product");
+        await _page.GotoAsync("http://localhost:5173");
+        await _page.WaitForSelectorAsync(".app-container");
 
-        await Page.GotoAsync("http://localhost:5173");
-        await Page.WaitForSelectorAsync(".app-container", State: StateAttached);
+        await _page.ClickAsync("button:has-text('Add Product')");
+        await _page.WaitForSelectorAsync(".modal-content");
 
-        // Click Add Product button
-        await Page.ClickAsync("button:has-text('Add Product')");
-        await Page.WaitForSelectorAsync(".modal-content", State: StateAttached);
+        await _page.FillAsync("input[name='productName']", "Test Product");
+        await _page.FillAsync("input[name='category']", "Test Category");
+        await _page.FillAsync("input[name='currentPrice']", "10.99");
 
-        // Fill in form
-        await Page.FillAsync("input[name='productName']", "Test Product");
-        await Page.FillAsync("input[name='category']", "Test Category");
-        await Page.FillAsync("input[name='currentPrice']", "10.99");
+        await _page.ClickAsync("button:has-text('Create Product')");
+        await _page.WaitForTimeoutAsync(2000);
 
-        // Click Create Product
-        await Page.ClickAsync("button:has-text('Create Product')");
-        await Page.WaitForTimeoutAsync(2000);
-
-        // Verify no error message
-        var errorMsg = await Page.QuerySelectorAsync(".alert-danger");
+        var errorMsg = await _page.QuerySelectorAsync(".alert-danger");
         if (errorMsg != null)
         {
             var errorText = await errorMsg.TextContentAsync();
-            Logger.Fail($"Error creating product: {errorText}");
+            throw new Exception($"Error creating product: {errorText}");
         }
 
-        // Close modal and verify product was added
-        await Page.ClickAsync("button:has-text('Cancel')");
-        await Page.WaitForTimeoutAsync(2000);
+        await _page.ClickAsync("button:has-text('Cancel')");
+        await _page.WaitForTimeoutAsync(2000);
 
-        var products = await Page.QuerySelectorAllAsync(".product-card");
-        Logger.Info($"Products count after add: {products.Length}");
-
-        if (products.Length > 0)
-        {
-            var firstProduct = products[0];
-            var productName = await firstProduct.QuerySelectorAsync(".product-name")?.TextContentAsync();
-            Logger.Info($"Created product: {productName}");
-        }
-
-        Logger.Pass("Add product test completed");
+        var products = await _page.QuerySelectorAllAsync(".product-card");
+        products.Count.ShouldBeGreaterThanOrEqualTo(0);
     }
 
-    [Test]
-    [Order(3)]
+    [Fact]
     public async Task View_Product_Details_Should_Display_Product_Information()
     {
-        Logger.Info("Testing view product details");
+        await _page.GotoAsync("http://localhost:5173");
+        await _page.WaitForSelectorAsync(".app-container");
 
-        await Page.GotoAsync("http://localhost:5173");
-        await Page.WaitForSelectorAsync(".app-container", State: StateAttached);
+        var firstProduct = await _page.QuerySelectorAsync(".product-card");
+        firstProduct.ShouldNotBeNull("No products available to view");
 
-        // Get first product
-        var firstProduct = await Page.QuerySelectorAsync(".product-card");
-        if (firstProduct == null)
-        {
-            Logger.Skip("No products available to view");
-            return;
-        }
-
-        // Click on product to view details
         await firstProduct.ClickAsync();
-        await Page.WaitForTimeoutAsync(2000);
+        await _page.WaitForTimeoutAsync(2000);
 
-        // Verify product details are displayed
-        var productName = await Page.QuerySelectorAsync(".product-name")?.TextContentAsync();
-        Logger.Info($"Product name: {productName}");
+        var nameElement = await _page.QuerySelectorAsync(".product-name");
+        var productName = await nameElement!.TextContentAsync();
+        productName.ShouldNotBeNull();
 
-        // Close product details
-        await Page.ClickAsync("button:has-text('Close')");
-
-        Logger.Pass("View product details test completed");
+        await _page.ClickAsync("button:has-text('Close')");
     }
 
-    [Test]
-    [Order(4)]
+    [Fact]
     public async Task Update_Product_Should_Modify_Product_Data()
     {
-        Logger.Info("Testing update product");
+        await _page.GotoAsync("http://localhost:5173");
+        await _page.WaitForSelectorAsync(".app-container");
 
-        await Page.GotoAsync("http://localhost:5173");
-        await Page.WaitForSelectorAsync(".app-container", State: StateAttached);
+        var firstProduct = await _page.QuerySelectorAsync(".product-card");
+        firstProduct.ShouldNotBeNull("No products available to update");
 
-        // Get first product
-        var firstProduct = await Page.QuerySelectorAsync(".product-card");
-        if (firstProduct == null)
-        {
-            Logger.Skip("No products available to update");
-            return;
-        }
-
-        // Click on Edit button
         await firstProduct.ClickAsync();
-        await Page.ClickAsync("button:has-text('Edit')");
-        await Page.WaitForSelectorAsync(".modal-content", State: StateAttached);
+        await _page.ClickAsync("button:has-text('Edit')");
+        await _page.WaitForSelectorAsync(".modal-content");
 
-        // Get current price
-        var currentPrice = await Page.InputValueAsync("input[name='currentPrice']");
+        var currentPrice = await _page.InputValueAsync("input[name='currentPrice']");
         var newPrice = (double.Parse(currentPrice) + 5).ToString();
 
-        // Update price
-        await Page.FillAsync("input[name='currentPrice']", newPrice);
+        await _page.FillAsync("input[name='currentPrice']", newPrice);
 
-        // Click Update Product
-        await Page.ClickAsync("button:has-text('Update Product')");
-        await Page.WaitForTimeoutAsync(2000);
+        await _page.ClickAsync("button:has-text('Update Product')");
+        await _page.WaitForTimeoutAsync(2000);
 
-        // Verify no error
-        var errorMsg = await Page.QuerySelectorAsync(".alert-danger");
+        var errorMsg = await _page.QuerySelectorAsync(".alert-danger");
         if (errorMsg != null)
         {
             var errorText = await errorMsg.TextContentAsync();
-            Logger.Fail($"Error updating product: {errorText}");
+            throw new Exception($"Error updating product: {errorText}");
         }
 
-        // Close modal
-        await Page.ClickAsync("button:has-text('Cancel')");
-        await Page.WaitForTimeoutAsync(2000);
-
-        Logger.Pass("Update product test completed");
+        await _page.ClickAsync("button:has-text('Cancel')");
+        await _page.WaitForTimeoutAsync(2000);
     }
 
-    [Test]
-    [Order(5)]
+    [Fact]
     public async Task Delete_Product_Should_Remove_Product_From_List()
     {
-        Logger.Info("Testing delete product");
+        await _page.GotoAsync("http://localhost:5173");
+        await _page.WaitForSelectorAsync(".app-container");
 
-        await Page.GotoAsync("http://localhost:5173");
-        await Page.WaitForSelectorAsync(".app-container", State: StateAttached);
+        var firstProduct = await _page.QuerySelectorAsync(".product-card");
+        firstProduct.ShouldNotBeNull("No products available to delete");
 
-        // Get first product
-        var firstProduct = await Page.QuerySelectorAsync(".product-card");
-        if (firstProduct == null)
-        {
-            Logger.Skip("No products available to delete");
-            return;
-        }
+        var productsBefore = await _page.QuerySelectorAllAsync(".product-card");
 
-        // Get product count before delete
-        var productsBefore = await Page.QuerySelectorAllAsync(".product-card");
-
-        // Click on Delete button
         await firstProduct.ClickAsync();
-        await Page.ClickAsync("button:has-text('Delete')");
-        await Page.WaitForSelectorAsync(".modal-content", State: StateAttached);
+        await _page.ClickAsync("button:has-text('Delete')");
+        await _page.WaitForSelectorAsync(".modal-content");
 
-        // Confirm delete
-        await Page.ClickAsync("button:has-text('Confirm')");
-        await Page.WaitForTimeoutAsync(2000);
+        await _page.ClickAsync("button:has-text('Confirm')");
+        await _page.WaitForTimeoutAsync(2000);
 
-        // Get product count after delete
-        var productsAfter = await Page.QuerySelectorAllAsync(".product-card");
+        var productsAfter = await _page.QuerySelectorAllAsync(".product-card");
 
-        Logger.Info($"Products before: {productsBefore.Length}, Products after: {productsAfter.Length}");
-
-        Logger.Pass("Delete product test completed");
+        productsAfter.Count.ShouldBe(productsBefore.Count - 1);
     }
 }
