@@ -19,7 +19,7 @@ export function ViewProductPage() {
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        const productDto = await productsClient.products(parseInt(id));
+        const productDto = await productsClient.productsGET(parseInt(id));
         setProduct(productDto);
         setError('');
       } catch (err) {
@@ -38,9 +38,11 @@ export function ViewProductPage() {
     }
 
     try {
+      const productsClient = new ProductsClient(null, httpClient());
+      await productsClient.productsDELETE(parseInt(id));
       navigate('/product');
     } catch (err) {
-      setError('Failed to delete product');
+      setError(err.message || 'Failed to delete product');
     }
   };
 
@@ -79,25 +81,25 @@ export function ViewProductPage() {
         <button style={styles.backButton} onClick={handleBack}>
           ← Back to Products
         </button>
-        <h1 style={styles.title}>{product.Name}</h1>
+        <h1 style={styles.title}>{product.name}</h1>
       </div>
 
       <div style={styles.card}>
         <div style={styles.cardBody}>
-          <p><strong>ID:</strong> {product.Id}</p>
-          <p><strong>Name:</strong> {product.Name}</p>
-          <p><strong>Category:</strong> {product.Category}</p>
-          {product.Barcode && (
-            <p><strong>Barcode:</strong> {product.Barcode}</p>
+          <p><strong>ID:</strong> {product.id}</p>
+          <p><strong>Name:</strong> {product.name}</p>
+          <p><strong>Category:</strong> {product.category}</p>
+          {product.barcode && (
+            <p><strong>Barcode:</strong> {product.barcode}</p>
           )}
-          <p><strong>Current Price:</strong> ${product.CurrentPrice.toFixed(2)}</p>
-          <p><strong>Original Price:</strong> ${product.OriginalPrice?.toFixed(2) || 'N/A'}</p>
+          <p><strong>Current Price:</strong> ${product.currentPrice.toFixed(2)}</p>
+          <p><strong>Original Price:</strong> ${product.originalPrice?.toFixed(2) || 'N/A'}</p>
         </div>
 
         <div style={styles.cardFooter}>
           <button
             style={styles.editButton}
-            onClick={() => handleBack()}
+            onClick={() => navigate(`/product/${id}/edit`)}
           >
             Edit Product
           </button>

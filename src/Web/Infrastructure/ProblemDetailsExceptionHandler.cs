@@ -29,6 +29,13 @@ public class ProblemDetailsExceptionHandler : IExceptionHandler
                 Title = "The specified resource was not found.",
                 Detail = ne.Message
             }),
+            Application.Common.Exceptions.ProductAlreadyExistsException pe => (StatusCodes.Status409Conflict, new ProblemDetails
+            {
+                Status = StatusCodes.Status409Conflict,
+                Type = "https://tools.ietf.org/html/rfc9110#section-15.5.6",
+                Title = "Conflict",
+                Detail = pe.Message
+            }),
             UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, new ProblemDetails
             {
                 Status = StatusCodes.Status401Unauthorized,

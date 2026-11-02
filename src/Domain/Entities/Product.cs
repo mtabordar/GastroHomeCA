@@ -60,4 +60,12 @@ public class Product : BaseEntity
         CurrentPrice = newPrice;
         LastUpdatedDate = DateTime.UtcNow.Date;
     }
+
+    /// <summary>
+    /// Marks the product for deletion.
+    /// </summary>
+    public void Delete()
+    {
+        LastUpdatedDate = DateTime.UtcNow.Date;
+    }
 }

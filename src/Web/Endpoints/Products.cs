@@ -1,4 +1,5 @@
 using GastroHomeCA.Application.Product.Commands.Create;
+using GastroHomeCA.Application.Product.Commands.Delete;
 using GastroHomeCA.Application.Product.Commands.Update;
 using GastroHomeCA.Application.Product.Queries.GetProductById;
 using GastroHomeCA.Application.Product.Queries.ListProducts;
@@ -15,6 +16,7 @@ public class Products : IEndpointGroup
     {
         groupBuilder.MapPost(CreateProduct);
         groupBuilder.MapPut(UpdateProduct, "{id:int}");
+        groupBuilder.MapDelete("{id:int}", DeleteProduct);
         groupBuilder.MapGet("/{id:int}", GetProduct);
         groupBuilder.MapGet("", ListProducts);
     }
@@ -35,6 +37,15 @@ public class Products : IEndpointGroup
 
         await sender.Send(command);
 
+        return TypedResults.NoContent();
+    }
+
+    [EndpointSummary("Delete a Product")]
+    [EndpointDescription("Deletes a product by its ID.")]
+    public static async Task<NoContent> DeleteProduct(ISender sender, int id)
+    {
+        var command = new DeleteProductCommand { Id = id };
+        await sender.Send(command);
         return TypedResults.NoContent();
     }
 

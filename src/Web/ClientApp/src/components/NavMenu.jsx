@@ -33,7 +33,8 @@ export function NavMenu() {
         <ul>
           <li><Link to="/">Home</Link></li>
           <li><Link to="/todo">Tasks</Link></li>
-          <li><Link to="/product">Product</Link></li>
+          <li><Link to="/product">Create</Link></li>
+          <li><Link to="/products">Products</Link></li>
         </ul>
         <ul>
           <AuthLinks />

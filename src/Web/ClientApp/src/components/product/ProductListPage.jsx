@@ -31,6 +31,20 @@ export function ProductListPage() {
     navigate(`/product/${productId}`);
   };
 
+  const handleEditProduct = (productId) => {
+    navigate(`/product/${productId}/edit`);
+  };
+
+  const handleDeleteProduct = async (productId) => {
+    if (!confirm('Are you sure you want to delete this product?')) return;
+    try {
+      await productsClient.productsDELETE(productId);
+      setProducts(products.filter(p => p.id !== productId));
+    } catch (err) {
+      setError(err.message || 'Failed to delete product');
+    }
+  };
+
   const handleCreateNew = () => {
     navigate('/product');
   };
@@ -68,25 +82,39 @@ export function ProductListPage() {
       ) : (
         <div style={styles.grid}>
           {products.map((product) => (
-            <div key={product.Id} style={styles.card}>
+            <div key={product.id} style={styles.card}>
               <div style={styles.cardHeader}>
-                <h3 style={styles.cardTitle}>{product.Name}</h3>
-                <span style={styles.price}>{product.CurrentPrice.toFixed(2)}</span>
+                <h3 style={styles.cardTitle}>{product.name}</h3>
+                <span style={styles.price}>{product.currentPrice.toFixed(2)}</span>
               </div>
               <div style={styles.cardBody}>
-                <p><strong>Category:</strong> {product.Category}</p>
-                {product.Barcode && (
-                  <p><strong>Barcode:</strong> {product.Barcode}</p>
+                <p><strong>Category:</strong> {product.category}</p>
+                {product.barcode && (
+                  <p><strong>Barcode:</strong> {product.barcode}</p>
                 )}
-                <p><strong>ID:</strong> {product.Id}</p>
+                <p><strong>ID:</strong> {product.id}</p>
               </div>
               <div style={styles.cardFooter}>
-                <button
-                  style={styles.viewButton}
-                  onClick={() => handleViewProduct(product.Id)}
-                >
-                  View Details
-                </button>
+                <div style={styles.buttonGroup}>
+                  <button
+                    style={styles.viewButton}
+                    onClick={() => handleViewProduct(product.id)}
+                  >
+                    View
+                  </button>
+                  <button
+                    style={styles.editButton}
+                    onClick={() => handleEditProduct(product.id)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    style={styles.deleteButton}
+                    onClick={() => handleDeleteProduct(product.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -165,10 +193,35 @@ const styles = {
     marginTop: '15px',
     textAlign: 'right'
   },
+  buttonGroup: {
+    display: 'flex',
+    gap: '8px',
+    justifyContent: 'flex-end'
+  },
   viewButton: {
     padding: '10px 20px',
     fontSize: '14px',
     backgroundColor: '#007bff',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    transition: 'background-color 0.2s'
+  },
+  editButton: {
+    padding: '10px 20px',
+    fontSize: '14px',
+    backgroundColor: '#ffc107',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    transition: 'background-color 0.2s'
+  },
+  deleteButton: {
+    padding: '10px 20px',
+    fontSize: '14px',
+    backgroundColor: '#dc3545',
     color: 'white',
     border: 'none',
     borderRadius: '4px',

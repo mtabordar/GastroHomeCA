@@ -159,10 +159,51 @@ export class ProductsClient {
     }
 
     /**
+     * Delete a Product
+     * @return No Content
+     */
+    productsDELETE(id: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/Products/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processProductsDELETE(_response);
+        });
+    }
+
+    protected processProductsDELETE(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            return throwException("Bad Request", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
      * Get a Product by ID
      * @return OK
      */
-    products(id: number): Promise<ProductDto> {
+    productsGET(id: number): Promise<ProductDto> {
         let url_ = this.baseUrl + "/api/Products/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -177,11 +218,11 @@ export class ProductsClient {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processProducts(_response);
+            return this.processProductsGET(_response);
         });
     }
 
-    protected processProducts(response: Response): Promise<ProductDto> {
+    protected processProductsGET(response: Response): Promise<ProductDto> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {

@@ -11,8 +11,12 @@ public class CreateProductCommandHandler(IApplicationDbContext context) : IReque
 {
     public async Task<int> Handle(CreateProductCommand request, CancellationToken cancellationToken)
     {
-        var existingProduct = await context.Products
-            .FirstOrDefaultAsync(p => p.Barcode == request.Barcode, cancellationToken);
+        Product? existingProduct = null;
+        if (!string.IsNullOrEmpty(request.Barcode))
+        {
+            existingProduct = await context.Products
+                .FirstOrDefaultAsync(p => p.Barcode == request.Barcode, cancellationToken);
+        }
 
         if (existingProduct != null)
         {
